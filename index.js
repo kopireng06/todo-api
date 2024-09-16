@@ -13,6 +13,9 @@ app.use(express.json()) // Parse incoming JSON requests
 
 // Auth routes
 app.use('/auth', authRoutes)
+app.get('/_health', (req, res) => {
+  res.status(200).json({ status: 'UP', timestamp: new Date() })
+})
 
 // Protected route example
 app.get('/protected', authenticateToken, (req, res) => {
