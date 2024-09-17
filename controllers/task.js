@@ -100,15 +100,36 @@ const deleteTask = async (req, res) => {
 
 const getTasks = async (req, res) => {
   const userId = req.user.id // Ensure req.user is properly populated by authentication middleware
+  const { sort_by, title, status } = req.query // Default sort to 'desc' if not provided
 
   try {
     // SQL query to fetch tasks for the authenticated user
-    const query = `
+    let query = `
       SELECT * FROM public.task
       WHERE user_id = $1
-      ORDER BY created_at DESC;
     `
-    const values = [userId]
+
+    let values = [userId]
+
+    if (title && status) {
+      query += ` AND title ILIKE $2 AND status = $3` // Use ILIKE for case-insensitive search
+      values.push(`%${title}%`)
+      values.push(status)
+    } else if (title) {
+      query += ` AND title ILIKE $2` // Use ILIKE for case-insensitive search
+      values.push(`%${title}%`)
+    } else if (status) {
+      query += ` AND status = $2` // Use ILIKE for case-insensitive search
+      values.push(status)
+    }
+
+    if (sort_by === 'due_date') {
+      query += ` ORDER BY due_date DESC`
+    } else {
+      query += ` ORDER BY created_at DESC`
+    }
+
+    console.log({ query })
 
     const result = await pool.query(query, values)
 
